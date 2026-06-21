@@ -26,8 +26,17 @@ export class PropertiesService {
 
   async findAll(query: QueryPropertyDto) {
     const where: Prisma.PropertyWhereInput = {};
-    const { propertyType, transactionType, status, city, province, scrapedFrom, minPrice, maxPrice, minSurface, maxSurface, rooms, bedrooms, page = 1, limit = 12, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    const { search, propertyType, transactionType, status, city, province, scrapedFrom, minPrice, maxPrice, minSurface, maxSurface, rooms, bedrooms, page = 1, limit = 12, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+        { province: { contains: search, mode: 'insensitive' } },
+      ];
+    }
     if (propertyType) where.propertyType = propertyType;
     if (transactionType) where.transactionType = transactionType;
     if (status) where.status = status;

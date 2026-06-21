@@ -80,6 +80,20 @@ export interface Favorite {
   createdAt: string;
 }
 
+export interface Review {
+  id: number;
+  userId: number;
+  propertyId: number;
+  rating: number;
+  comment?: string;
+  user: {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+  };
+  createdAt: string;
+}
+
 export interface Inquiry {
   id: number;
   message: string;

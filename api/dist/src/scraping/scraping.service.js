@@ -92,7 +92,7 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
     }
     async createSource(data) {
         return this.prisma.scrapingSource.create({
-            data: { name: data.name, baseUrl: data.baseUrl, selectors: data.selectors, usePuppeteer: data.usePuppeteer ?? false },
+            data: { name: data.name, baseUrl: data.baseUrl, selectors: data.selectors, usePuppeteer: data.usePuppeteer ?? false, maxPages: data.maxPages ?? 1, pageUrlPattern: data.pageUrlPattern, nextPageSelector: data.nextPageSelector },
         });
     }
     async updateSource(id, data) {
@@ -130,7 +130,18 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
             data: { status: 'RUNNING', startedAt: new Date() },
         });
         try {
-            const urls = [source.baseUrl];
+            let urls = [source.baseUrl];
+            if (source.maxPages > 1) {
+                if (source.pageUrlPattern) {
+                    urls = [];
+                    for (let p = 1; p <= source.maxPages; p++) {
+                        urls.push(source.baseUrl + source.pageUrlPattern.replace('{page}', String(p)));
+                    }
+                }
+                else if (source.nextPageSelector) {
+                    urls = [source.baseUrl];
+                }
+            }
             let scraped = 0;
             let failed = 0;
             let totalFound = 0;
@@ -238,7 +249,7 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
     }
     async scrapeUrl(url, source) {
         if (source.usePuppeteer) {
-            return this.scrapeWithPuppeteer(url, source.selectors);
+            return this.scrapeWithPuppeteer(url, source.selectors, source);
         }
         return this.scrapeWithCheerio(url, source.selectors);
     }
@@ -257,7 +268,7 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
             return [];
         }
     }
-    async scrapeWithPuppeteer(url, selectors) {
+    async scrapeWithPuppeteer(url, selectors, source) {
         let browser = null;
         try {
             const puppeteer = await import('puppeteer');
@@ -267,123 +278,135 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
             });
             const page = await browser.newPage();
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-            await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-            const listingSelector = selectors.listingSelector || '[class*=ad], [class*=listing], [class*=card], [class*=item], article, li[class]';
-            await page.waitForSelector(listingSelector, { timeout: 10000 }).catch(() => { });
-            const results = await page.evaluate((sel) => {
-                const ls = sel.listingSelector || '[class*=ad], [class*=listing], [class*=card], [class*=item], article, li[class]';
-                const items = document.querySelectorAll(ls);
-                const cities = ['tunis', 'sousse', 'sfax', 'nabeul', 'bizerte', 'gabes', 'kairouan', 'monastir', 'ariana', 'ben arous', 'manouba', 'mahdia', 'kasserine', 'nadhour', 'megrine', 'la ?marsa', 'carthage', 'sidi bou ?said', 'hammamet', 'gammarth', 'ennasr', 'charguia', 'mourouj', 'mnihla', 'raoued', 'kalâa kebira', 'jemmal', 'msaken', 'akouda', 'chott', 'meriem', 'bouficha', 'hammam ?sousse', 'sakiet', 'ezzit', 'ketena', 'sfax', 'gremda', 'thyna', 'kerkennah', 'mahrès', 'agareb', 'bir ali', 'hencha', 'sidi ?bouzid', 'kairouan', 'nasrallah', 'haffouz', 'oueslatia', 'bouhajla', 'chebika', 'fériana', 'tébessa'];
-                const cityPattern = new RegExp('\\b(' + cities.join('|') + ')\\b', 'i');
-                return Array.from(items).map(el => {
-                    const text = el.innerText || '';
-                    const html = el.innerHTML;
-                    const link = el.querySelector('a');
-                    const img = el.querySelector('img');
-                    let title = '';
-                    const hEl = el.querySelector(sel.titleSelector || 'h2, h3, [class*=title], [class*=name]');
-                    if (hEl)
-                        title = hEl.innerText.trim();
-                    if (!title) {
-                        const maybeTitle = text.split('\n').filter(l => l.trim() && l.trim().length > 5);
-                        title = maybeTitle[0] || '';
+            const allResults = [];
+            const maxPages = source?.nextPageSelector ? (source?.maxPages || 1) : 1;
+            for (let currentPage = 1; currentPage <= maxPages; currentPage++) {
+                if (currentPage === 1) {
+                    await page.goto(url, { waitUntil: 'load', timeout: 20000 }).catch(async () => {
+                        this.logger.warn('Page load timeout, trying domcontentloaded...');
+                        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => { });
+                    });
+                }
+                else {
+                    const nextBtn = await page.$(source.nextPageSelector).catch(() => null);
+                    if (!nextBtn)
+                        break;
+                    await nextBtn.click().catch(() => null);
+                }
+                await page.evaluate(() => new Promise(r => setTimeout(r, 3000)));
+                const pageResults = await page.evaluate((sel) => {
+                    const ls = sel.listingSelector || '[class*=ad], [class*=listing], [class*=card], [class*=item], article, li[class]';
+                    let items = document.querySelectorAll(ls);
+                    if (items.length === 0) {
+                        items = document.querySelectorAll('a[href*="property"], a[href*="listing"], a[href*="ad"], a[href*="item"], a[href*="detail"], a[href*="announce"], ' +
+                            '[class*="property"]:not([class*="pagination"]):not([class*="page"]):not([class*="nav"]), ' +
+                            '[class*="listing"]:not([class*="pagination"]):not([class*="page"]):not([class*="nav"]), ' +
+                            '[class*="card"]:not([class*="pagination"]):not([class*="page"]):not([class*="nav"])');
                     }
-                    let priceText = '';
-                    const pEl = el.querySelector(sel.priceSelector || '[class*=price]');
-                    if (pEl)
-                        priceText = pEl.innerText.trim();
-                    if (!priceText) {
-                        const match = text.match(/(\d[\d\s.]*)\s*(dt|tnd|dinar|€)/i);
-                        if (match)
-                            priceText = match[1];
-                    }
-                    if (!priceText) {
-                        const match = text.match(/price[:\s]*(\d[\d\s.,]*)/i);
-                        if (match)
-                            priceText = match[1];
-                    }
-                    let city = '';
-                    const cEl = el.querySelector(sel.locationSelector || '[class*=location], [class*=city], [class*=place]');
-                    if (cEl)
-                        city = cEl.innerText.trim();
-                    if (!city) {
-                        const match = text.match(cityPattern);
-                        if (match)
-                            city = match[0];
-                    }
-                    if (!city) {
-                        const match = text.match(/[Àà]\s*('?"?)(\w+(?:\s+\w+)?)\1/i);
-                        if (match)
-                            city = match[2];
-                    }
-                    if (!city) {
-                        const match = text.match(/(?:à|location|ville|région)\s*[:\s]+(\w+(?:[\s-]\w+)?)/i);
-                        if (match && !/^\d+$/.test(match[1]) && match[1].length > 2)
-                            city = match[1];
-                    }
-                    let surface = '';
-                    const sEl = el.querySelector(sel.surfaceSelector || '[class*=surface], [class*=area], [class*=size]');
-                    if (sEl)
-                        surface = sEl.innerText.trim();
-                    if (!surface) {
-                        const match = text.match(/(\d+)\s*m[²2]/i);
-                        if (match)
-                            surface = match[1];
-                    }
-                    if (!surface) {
-                        const match = text.match(/(\d+)\s*(m[èe]tre|metre)/i);
-                        if (match)
-                            surface = match[1];
-                    }
-                    if (!surface) {
-                        const match = text.match(/surface[:\s]*(\d+)/i);
-                        if (match)
-                            surface = match[1];
-                    }
-                    let rooms = '';
-                    const rEl = el.querySelector(sel.roomsSelector || '[class*=room]');
-                    if (rEl)
-                        rooms = rEl.innerText.trim();
-                    if (!rooms) {
-                        const match = text.match(/S\s*\+\s*(\d+)/i);
-                        if (match)
-                            rooms = (parseInt(match[1], 10) + 1).toString();
-                    }
-                    if (!rooms) {
-                        const match = text.match(/(\d+)\s*pi[eè]ces?/i);
-                        if (match)
-                            rooms = match[1];
-                    }
-                    if (!rooms) {
-                        const match = text.match(/(\d+)\s*rooms?/i);
-                        if (match)
-                            rooms = match[1];
-                    }
-                    let imageUrl = '';
-                    if (img && img.src && !img.src.includes('data:'))
-                        imageUrl = img.src;
-                    return {
-                        title: title.slice(0, 200),
-                        price: priceText,
-                        description: text.slice(0, 500),
-                        city,
-                        surface,
-                        rooms,
-                        imageUrl,
-                        url: link?.href || '',
-                    };
-                }).filter(r => r.title || r.price);
-            }, selectors);
-            return results.map(r => ({
-                title: r.title || 'Untitled',
-                price: this.parsePrice(r.price),
-                description: r.description || '',
-                city: r.city || '',
-                surface: parseInt(r.surface) || undefined,
-                rooms: parseInt(r.rooms) || undefined,
-                images: r.imageUrl ? [r.imageUrl] : [],
-                sourceUrl: r.url,
-            }));
+                    const priceRegex = /(\d[\d\s.,]*)\s*(€|eur|usd|dt|tnd|dinar|\$|£)/i;
+                    const surfaceRegex = /(\d+)\s*m[²2]/i;
+                    const roomsRegex = /(\d+)\s*(bed|room|bedroom|br|pi[eè]ce)/i;
+                    return Array.from(items).map(el => {
+                        const text = el.innerText || '';
+                        const link = el.querySelector('a');
+                        const img = el.querySelector('img');
+                        let title = '';
+                        const hEl = el.querySelector('h2, h3, h4, [class*=title], [class*=name]');
+                        if (hEl)
+                            title = hEl.innerText.trim();
+                        if (!title) {
+                            const lines = text.split('\n').filter(l => l.trim() && l.trim().length > 5);
+                            title = lines[0] || '';
+                        }
+                        if (!title && link)
+                            title = link.innerText.trim();
+                        if (/^(page|prev|next|last|first|previous|1\s*of|\d+\s*-\s*\d+)/i.test(title))
+                            title = '';
+                        let priceText = '';
+                        const pEl = el.querySelector(sel.priceSelector || '[class*=price]');
+                        if (pEl)
+                            priceText = pEl.innerText.trim();
+                        if (!priceText) {
+                            const match = text.match(priceRegex);
+                            if (match)
+                                priceText = match[1];
+                        }
+                        if (!priceText) {
+                            const match = text.match(/price[:\s]*(\d[\d\s.,]*)/i);
+                            if (match)
+                                priceText = match[1];
+                        }
+                        if (!priceText) {
+                            const digits = text.match(/\b\d{3,}(?:[\s.,]\d{3})*(?:[\s.,]\d{2})?\b/);
+                            if (digits)
+                                priceText = digits[0];
+                        }
+                        let location = '';
+                        const cEl = el.querySelector('[class*=location], [class*=city], [class*=place], [class*=region]');
+                        if (cEl)
+                            location = cEl.innerText.trim();
+                        if (!location) {
+                            const match = text.match(/(?:in|at|location|city|area|region|πόλη|τοποθεσία)\s*[:\s]+(\w+(?:[\s-]\w+)?)/i);
+                            if (match && !/^\d+$/.test(match[1]) && match[1].length > 2)
+                                location = match[1];
+                        }
+                        if (location.length > 30)
+                            location = '';
+                        let surface = '';
+                        const sEl = el.querySelector('[class*=surface], [class*=area], [class*=size]');
+                        if (sEl)
+                            surface = sEl.innerText.trim();
+                        if (!surface) {
+                            const match = text.match(surfaceRegex);
+                            if (match)
+                                surface = match[1];
+                        }
+                        if (!surface) {
+                            const match = text.match(/(\d+)\s*(m[èe]tre|metre|sq[.\s]?m|m²)/i);
+                            if (match)
+                                surface = match[1];
+                        }
+                        let rooms = '';
+                        const rEl = el.querySelector('[class*=room], [class*=bed]');
+                        if (rEl)
+                            rooms = rEl.innerText.trim();
+                        if (!rooms) {
+                            const match = text.match(roomsRegex);
+                            if (match)
+                                rooms = match[1];
+                        }
+                        if (!rooms) {
+                            const match = text.match(/\b(\d)\s*[-–]\s*(?:bed|room|bedroom)/i);
+                            if (match)
+                                rooms = match[1];
+                        }
+                        const imageUrls = Array.from(el.querySelectorAll('img'))
+                            .map((im) => im.src)
+                            .filter(src => src && !src.includes('data:') && !src.includes('base64'));
+                        return {
+                            title: title.slice(0, 200),
+                            price: priceText,
+                            description: text.slice(0, 500),
+                            city: location,
+                            surface,
+                            rooms,
+                            imageUrls,
+                            url: link?.href || '',
+                        };
+                    }).filter(r => (r.title && r.title.length > 3) || r.price);
+                }, selectors);
+                allResults.push(...pageResults.map(r => ({
+                    title: r.title || 'Untitled',
+                    price: this.parsePrice(r.price),
+                    description: r.description || '',
+                    city: r.city || '',
+                    surface: parseInt(r.surface) || undefined,
+                    rooms: parseInt(r.rooms) || undefined,
+                    images: (r.imageUrls || []).filter(Boolean),
+                    sourceUrl: r.url,
+                })));
+            }
+            return allResults;
         }
         catch (err) {
             this.logger.warn(`Puppeteer scrape failed for ${url}: ${err.message}`);
@@ -398,6 +421,12 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
         const results = [];
         $(selectors.listingSelector || 'article, .listing, .ad').each((_, el) => {
             const $el = $(el);
+            const images = [];
+            $el.find(selectors.imageSelector || 'img').each((_, img) => {
+                const src = $(img).attr('src');
+                if (src && !src.includes('data:') && !src.includes('base64'))
+                    images.push(src);
+            });
             results.push({
                 title: $el.find(selectors.titleSelector || 'h2, h3').text().trim(),
                 price: this.parsePrice($el.find(selectors.priceSelector || '[class*=price]').text().trim()),
@@ -405,7 +434,7 @@ let ScrapingService = ScrapingService_1 = class ScrapingService {
                 city: $el.find(selectors.locationSelector || '[class*=location], [class*=city]').text().trim(),
                 surface: parseInt($el.find(selectors.surfaceSelector || '[class*=surface], [class*=area]').text().trim()) || undefined,
                 rooms: parseInt($el.find(selectors.roomsSelector || '[class*=room]').text().trim()) || undefined,
-                imageUrl: $el.find(selectors.imageSelector || 'img').first().attr('src'),
+                images,
             });
         });
         return results;

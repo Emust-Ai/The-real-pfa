@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Search, Shield, ShieldOff, Trash2, ChevronDown, KeyRound, X } from 'lucide-react';
+import { toast } from '../components/ui/toast';
 
 interface User {
   id: number;
@@ -139,4 +140,55 @@ export function AdminUsers() {
                               </Button>
                               <Button variant="outline" size="sm" className="h-7 text-xs"
                                 onClick={() => setConfirmDelete(null)}>
-                                C
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <Button variant="ghost" size="icon" className="h-7 w-7"
+                              onClick={() => setConfirmDelete(u.id)}
+                              disabled={u.id === JSON.parse(localStorage.getItem('user') || '{}').id}>
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {passwordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setPasswordModal(null)}>
+          <div className="bg-popover rounded-lg shadow-lg p-6 w-full max-w-sm mx-4 space-y-4"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Change Password</h3>
+              <button onClick={() => setPasswordModal(null)} className="p-1 hover:bg-accent rounded">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">Set new password for <strong>{passwordModal.email}</strong></p>
+            <Input type="password" placeholder="New password (min 6 chars)"
+              value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+            <Input type="password" placeholder="Confirm password"
+              value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setPasswordModal(null)}>Cancel</Button>
+              <Button onClick={() => {
+                if (newPassword.length < 6) return toast('Password must be at least 6 characters', 'error');
+                if (newPassword !== confirmPassword) return toast('Passwords do not match', 'error');
+                changePassword.mutate({ id: passwordModal.id, password: newPassword });
+              }} disabled={changePassword.isPending}>
+                {changePassword.isPending ? 'Saving...' : 'Save Password'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

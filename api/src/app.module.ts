@@ -8,7 +8,10 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
 import { ScrapingModule } from './scraping/scraping.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MessagingModule } from './messaging/messaging.module';
 import { AdminModule } from './admin/admin.module';
+import { SavedSearchesModule } from './saved-searches/saved-searches.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { AdminModule } from './admin/admin.module';
     ScrapingModule,
     NotificationsModule,
     AdminModule,
+    SavedSearchesModule,
+    MessagingModule,
+    ReviewsModule,
   ],
 })
 export class AppModule {}

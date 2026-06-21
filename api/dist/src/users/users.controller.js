@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
 const users_service_1 = require("./users.service");
@@ -45,6 +46,17 @@ let UsersController = class UsersController {
     }
     remove(id) {
         return this.usersService.remove(id);
+    }
+    getProfile(userId) {
+        return this.usersService.findOne(userId);
+    }
+    updateProfile(userId, body) {
+        return this.usersService.update(userId, body);
+    }
+    updateMyPassword(userId, password) {
+        if (!password || password.length < 6)
+            throw new Error('Password must be at least 6 characters');
+        return this.usersService.updatePassword(userId, password);
     }
 };
 exports.UsersController = UsersController;
@@ -106,6 +118,35 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Get)('me/profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Get my profile' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Patch)('me/profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Update my profile' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Patch)('me/password'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Change my password' }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Body)('password')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateMyPassword", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('Users'),
     (0, swagger_1.ApiBearerAuth)(),

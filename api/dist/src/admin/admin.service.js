@@ -50,6 +50,12 @@ let AdminService = class AdminService {
             recentJobs,
         };
     }
+    async cleanupTestData() {
+        const result = await this.prisma.property.deleteMany({
+            where: { scrapedFrom: 'realestateonline.gr' },
+        });
+        return { deleted: result.count, message: `Deleted ${result.count} test properties` };
+    }
 };
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([

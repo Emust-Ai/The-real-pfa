@@ -3,13 +3,13 @@ export declare class NotificationsService {
     private prisma;
     constructor(prisma: PrismaService);
     findAll(userId: number): Promise<{
+        message: string;
         type: string;
         title: string;
         id: number;
         createdAt: Date;
         link: string | null;
         userId: number;
-        message: string;
         isRead: boolean;
     }[]>;
     getUnreadCount(userId: number): Promise<number>;
@@ -22,13 +22,13 @@ export declare class NotificationsService {
         type?: string;
         link?: string;
     }): Promise<{
+        message: string;
         type: string;
         title: string;
         id: number;
         createdAt: Date;
         link: string | null;
         userId: number;
-        message: string;
         isRead: boolean;
     }>;
 }

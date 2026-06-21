@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -18,5 +18,11 @@ export class AdminController {
   @ApiOperation({ summary: 'Get admin dashboard statistics' })
   getStats() {
     return this.adminService.getStats();
+  }
+
+  @Delete('properties/cleanup-test')
+  @ApiOperation({ summary: 'Delete test scraped properties' })
+  async cleanupTestData() {
+    return this.adminService.cleanupTestData();
   }
 }

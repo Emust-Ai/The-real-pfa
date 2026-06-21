@@ -25,6 +25,9 @@ let AdminController = class AdminController {
     getStats() {
         return this.adminService.getStats();
     }
+    async cleanupTestData() {
+        return this.adminService.cleanupTestData();
+    }
 };
 exports.AdminController = AdminController;
 __decorate([
@@ -34,6 +37,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "getStats", null);
+__decorate([
+    (0, common_1.Delete)('properties/cleanup-test'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete test scraped properties' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "cleanupTestData", null);
 exports.AdminController = AdminController = __decorate([
     (0, swagger_1.ApiTags)('Admin'),
     (0, common_1.Controller)('admin'),

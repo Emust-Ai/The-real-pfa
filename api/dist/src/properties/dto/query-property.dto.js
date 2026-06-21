@@ -20,6 +20,7 @@ class QueryPropertyDto {
     status;
     city;
     province;
+    search;
     scrapedFrom;
     minPrice;
     maxPrice;
@@ -63,6 +64,12 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], QueryPropertyDto.prototype, "province", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], QueryPropertyDto.prototype, "search", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)(),
     (0, class_validator_1.IsString)(),

@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Patch, Delete, Body, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { UsersService } from './users.service';
@@ -53,5 +54,27 @@ export class UsersController {
   @Roles(Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
+  }
+
+  @Get('me/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get my profile' })
+  getProfile(@CurrentUser('id') userId: number) {
+    return this.usersService.findOne(userId);
+  }
+
+  @Patch('me/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update my profile' })
+  updateProfile(@CurrentUser('id') userId: number, @Body() body: { firstName?: string; lastName?: string; phone?: string }) {
+    return this.usersService.update(userId, body);
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Change my password' })
+  updateMyPassword(@CurrentUser('id') userId: number, @Body('password') password: string) {
+    if (!password || password.length < 6) throw new Error('Password must be at least 6 characters');
+    return this.usersService.updatePassword(userId, password);
   }
 }

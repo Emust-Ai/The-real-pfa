@@ -50,4 +50,11 @@ export class AdminService {
       recentJobs,
     };
   }
+
+  async cleanupTestData() {
+    const result = await this.prisma.property.deleteMany({
+      where: { scrapedFrom: 'realestateonline.gr' },
+    });
+    return { deleted: result.count, message: `Deleted ${result.count} test properties` };
+  }
 }

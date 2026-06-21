@@ -22,13 +22,13 @@ export class ScrapingController {
 
   @Post('sources')
   @ApiOperation({ summary: 'Create a scraping source' })
-  createSource(@Body() body: { name: string; baseUrl: string; selectors: any; usePuppeteer?: boolean }) {
+  createSource(@Body() body: { name: string; baseUrl: string; selectors: any; usePuppeteer?: boolean; maxPages?: number; pageUrlPattern?: string; nextPageSelector?: string }) {
     return this.scrapingService.createSource(body);
   }
 
   @Patch('sources/:id')
   @ApiOperation({ summary: 'Update a scraping source' })
-  updateSource(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+  updateSource(@Param('id', ParseIntPipe) id: number, @Body() body: { name?: string; baseUrl?: string; selectors?: any; isActive?: boolean; usePuppeteer?: boolean; maxPages?: number; pageUrlPattern?: string; nextPageSelector?: string }) {
     return this.scrapingService.updateSource(id, body);
   }
 

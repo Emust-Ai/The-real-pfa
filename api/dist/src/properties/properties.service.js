@@ -33,7 +33,16 @@ let PropertiesService = class PropertiesService {
     }
     async findAll(query) {
         const where = {};
-        const { propertyType, transactionType, status, city, province, scrapedFrom, minPrice, maxPrice, minSurface, maxSurface, rooms, bedrooms, page = 1, limit = 12, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+        const { search, propertyType, transactionType, status, city, province, scrapedFrom, minPrice, maxPrice, minSurface, maxSurface, rooms, bedrooms, page = 1, limit = 12, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { city: { contains: search, mode: 'insensitive' } },
+                { address: { contains: search, mode: 'insensitive' } },
+                { province: { contains: search, mode: 'insensitive' } },
+            ];
+        }
         if (propertyType)
             where.propertyType = propertyType;
         if (transactionType)

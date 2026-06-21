@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../lib/api';
 import { PropertyCard } from '../components/property/PropertyCard';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { toast } from '../components/ui/toast';
+import { useAuthStore } from '../stores/authStore';
 import type { PropertyListResponse, PropertyType, TransactionType } from '../types/property';
 
 const propertyTypes: { value: PropertyType | ''; label: string }[] = [
@@ -23,17 +25,22 @@ const transactionTypes: { value: TransactionType | ''; label: string }[] = [
 ];
 
 export function PropertyList() {
+  const { isAuthenticated } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [city, setCity] = useState(searchParams.get('city') ?? '');
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [propertyType, setPropertyType] = useState<(PropertyType | '')>(searchParams.get('propertyType') as PropertyType ?? '');
   const [transactionType, setTransactionType] = useState<(TransactionType | '')>(searchParams.get('transactionType') as TransactionType ?? '');
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') ?? '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') ?? '');
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
   const scrapedFrom = searchParams.get('scrapedFrom') ?? '';
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveNotifyInApp, setSaveNotifyInApp] = useState(true);
+  const [saveNotifyEmail, setSaveNotifyEmail] = useState(false);
 
   const params = new URLSearchParams();
-  if (city) params.set('city', city);
+  if (search) params.set('search', search);
   if (scrapedFrom) params.set('scrapedFrom', scrapedFrom);
   if (propertyType) params.set('propertyType', propertyType);
   if (transactionType) params.set('transactionType', transactionType);
@@ -49,18 +56,49 @@ export function PropertyList() {
 
   useEffect(() => {
     setSearchParams(params);
-  }, [city, propertyType, transactionType, minPrice, maxPrice, page]);
+  }, [search, propertyType, transactionType, minPrice, maxPrice, page]);
 
   const handleFilter = () => { setPage(1); };
+
+  const saveSearchMutation = useMutation({
+    mutationFn: (data: { name: string; filters: Record<string, any>; notifyInApp: boolean; notifyEmail: boolean }) =>
+      api.post('/saved-searches', data).then(r => r.data),
+    onSuccess: () => {
+      toast('Search saved!', 'success');
+      setShowSaveForm(false);
+      setSaveName('');
+    },
+    onError: () => toast('Failed to save search', 'error'),
+  });
+
+  const handleSaveSearch = () => {
+    if (!saveName.trim()) {
+      toast('Please enter a name', 'error');
+      return;
+    }
+    saveSearchMutation.mutate({
+      name: saveName,
+      filters: {
+        propertyType: propertyType || undefined,
+        transactionType: transactionType || undefined,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
+        search: search || undefined,
+      },
+      notifyInApp: saveNotifyInApp,
+      notifyEmail: saveNotifyEmail,
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Properties</h1>
 
       <div className="flex flex-wrap gap-3 items-end bg-card p-4 rounded-lg border">
-        <div>
-          <label className="text-xs text-muted-foreground">City</label>
-          <Input value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. Algiers" className="w-40" />
+        <div className="w-full sm:w-auto sm:flex-1 min-w-[200px]">
+          <label className="text-xs text-muted-foreground">Search</label>
+          <Input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by title, location, description..." className="w-full" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground">Type</label>
@@ -77,15 +115,44 @@ export function PropertyList() {
           </select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Min Price (TND)</label>
-          <Input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="0" className="w-32" />
+          <label className="text-xs text-muted-foreground">Min Price</label>
+          <Input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="0" className="w-28" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Max Price (TND)</label>
-          <Input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="999M" className="w-32" />
+          <label className="text-xs text-muted-foreground">Max Price</label>
+          <Input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="999M" className="w-28" />
         </div>
         <Button onClick={handleFilter}>Filter</Button>
+        {isAuthenticated && (
+          <Button variant="outline" onClick={() => setShowSaveForm(!showSaveForm)}>
+            {showSaveForm ? 'Cancel' : 'Save This Search'}
+          </Button>
+        )}
       </div>
+
+      {showSaveForm && (
+        <div className="flex flex-wrap gap-3 items-end bg-muted/50 p-4 rounded-lg border">
+          <Input
+            label="Search Name"
+            id="saveSearchName"
+            value={saveName}
+            onChange={e => setSaveName(e.target.value)}
+            placeholder="e.g. Apartments in Tunis"
+            className="w-64"
+          />
+          <label className="flex items-center gap-2 text-sm pb-1">
+            <input type="checkbox" checked={saveNotifyInApp} onChange={e => setSaveNotifyInApp(e.target.checked)} />
+            Notify in app
+          </label>
+          <label className="flex items-center gap-2 text-sm pb-1">
+            <input type="checkbox" checked={saveNotifyEmail} onChange={e => setSaveNotifyEmail(e.target.checked)} />
+            Notify by email
+          </label>
+          <Button onClick={handleSaveSearch} disabled={saveSearchMutation.isPending}>
+            {saveSearchMutation.isPending ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-muted-foreground">Loading properties...</p>

@@ -4,6 +4,7 @@ export declare class FavoritesService {
     constructor(prisma: PrismaService);
     add(userId: number, propertyId: number): Promise<{
         property: {
+            scrapedFrom: string | null;
             description: string | null;
             title: string;
             id: number;
@@ -24,7 +25,6 @@ export declare class FavoritesService {
             images: string[];
             features: string[];
             status: import("@prisma/client").$Enums.PropertyStatus;
-            scrapedFrom: string | null;
             sourceUrl: string | null;
             sourceUrlHash: string | null;
             retailerId: number;
@@ -45,6 +45,7 @@ export declare class FavoritesService {
                 id: number;
             };
         } & {
+            scrapedFrom: string | null;
             description: string | null;
             title: string;
             id: number;
@@ -65,7 +66,6 @@ export declare class FavoritesService {
             images: string[];
             features: string[];
             status: import("@prisma/client").$Enums.PropertyStatus;
-            scrapedFrom: string | null;
             sourceUrl: string | null;
             sourceUrlHash: string | null;
             retailerId: number;

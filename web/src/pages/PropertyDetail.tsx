@@ -7,7 +7,9 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Building2, MapPin, Bed, Bath, Maximize2, Heart, MessageSquare, ArrowLeft, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { toast } from '../components/ui/toast';
 import type { Property } from '../types/property';
+import { ReviewSection } from '../components/reviews/ReviewSection';
 
 const typeLabels: Record<string, string> = {
   APARTMENT: 'Apartment', HOUSE: 'House', VILLA: 'Villa',
@@ -49,7 +51,7 @@ export function PropertyDetail() {
 
   const sendInquiry = useMutation({
     mutationFn: () => api.post(`/inquiries/${id}`, { message: inquiryMsg }),
-    onSuccess: () => { setInquiryMsg(''); alert('Inquiry sent!'); },
+    onSuccess: () => { setInquiryMsg(''); toast('Inquiry sent!', 'success'); },
   });
 
   if (isLoading) return <div className="p-6"><p className="text-muted-foreground">Loading...</p></div>;
@@ -137,6 +139,8 @@ export function PropertyDetail() {
               )}
             </CardContent>
           </Card>
+
+          <ReviewSection propertyId={property.id} propertyRetailerId={property.retailerId} />
         </div>
 
         <div className="space-y-4">
@@ -149,6 +153,14 @@ export function PropertyDetail() {
                     onClick={() => isFav ? removeFav.mutate() : addFav.mutate()}>
                     <Heart className={`h-4 w-4 ${isFav ? 'fill-current' : ''}`} />
                     {isFav ? 'Remove from Favorites' : 'Add to Favorites'}
+                  </Button>
+                  <Button variant="outline" className="w-full gap-2" onClick={async () => {
+                    try {
+                      const res = await api.post(`/properties/${property.id}/conversation`);
+                      navigate(`/conversations?open=${res.data.id}`);
+                    } catch { toast('Failed to open conversation', 'error'); }
+                  }}>
+                    <MessageSquare className="h-4 w-4" /> Message Retailer
                   </Button>
                 </CardContent>
               </Card>

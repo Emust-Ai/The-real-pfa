@@ -11,11 +11,11 @@ export declare class InquiriesService {
             id: number;
         };
     } & {
+        message: string;
         id: number;
         createdAt: Date;
         userId: number;
         propertyId: number;
-        message: string;
     }>;
     findAll(userId: number, userRole: string): Promise<({
         property: {
@@ -23,10 +23,10 @@ export declare class InquiriesService {
             id: number;
         };
     } & {
+        message: string;
         id: number;
         createdAt: Date;
         userId: number;
         propertyId: number;
-        message: string;
     })[]>;
 }

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Link } from 'react-router-dom';
-import { Play, Plus, Trash2, Loader2, ExternalLink } from 'lucide-react';
+import { Play, Plus, Trash2, Loader2, ExternalLink, Clock, RefreshCw } from 'lucide-react';
 
 interface Source {
   id: number;
@@ -14,6 +14,9 @@ interface Source {
   selectors: Record<string, string>;
   isActive: boolean;
   usePuppeteer: boolean;
+  maxPages: number;
+  pageUrlPattern: string | null;
+  nextPageSelector: string | null;
   createdAt: string;
 }
 
@@ -49,6 +52,9 @@ export function ScrapingDashboard() {
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [usePuppeteer, setUsePuppeteer] = useState(false);
+  const [maxPages, setMaxPages] = useState(1);
+  const [pageUrlPattern, setPageUrlPattern] = useState('');
+  const [nextPageSelector, setNextPageSelector] = useState('');
 
   const { data: sources, isLoading: srcLoading } = useQuery<Source[]>({
     queryKey: ['scraping-sources'],
@@ -61,8 +67,8 @@ export function ScrapingDashboard() {
   });
 
   const createSource = useMutation({
-    mutationFn: () => api.post('/scraping/sources', { name, baseUrl, selectors: defaultSelectors, usePuppeteer }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['scraping-sources'] }); setShowForm(false); setName(''); setBaseUrl(''); setUsePuppeteer(false); },
+    mutationFn: () => api.post('/scraping/sources', { name, baseUrl, selectors: defaultSelectors, usePuppeteer, maxPages, pageUrlPattern: pageUrlPattern || undefined, nextPageSelector: nextPageSelector || undefined }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['scraping-sources'] }); setShowForm(false); setName(''); setBaseUrl(''); setUsePuppeteer(false); setMaxPages(1); setPageUrlPattern(''); setNextPageSelector(''); },
   });
 
   const deleteSource = useMutation({
@@ -70,10 +76,45 @@ export function ScrapingDashboard() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scraping-sources'] }),
   });
 
+  const [elapsed, setElapsed] = useState(0);
+  const [runningJobId, setRunningJobId] = useState<number | null>(null);
+
+  const activeJob = jobs?.find(j => j.status === 'RUNNING' || j.status === 'PENDING');
+
+  useEffect(() => {
+    if (activeJob) {
+      setRunningJobId(activeJob.id);
+      const start = activeJob.startedAt ? new Date(activeJob.startedAt).getTime() : Date.now();
+      const interval = setInterval(() => {
+        setElapsed(Math.floor((Date.now() - start) / 1000));
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setRunningJobId(null);
+    }
+  }, [activeJob?.id, activeJob?.status, activeJob?.startedAt]);
+
   const startJob = useMutation({
     mutationFn: (sourceId: number) => api.post(`/scraping/jobs/${sourceId}/start`),
-    onSuccess: () => setTimeout(() => queryClient.invalidateQueries({ queryKey: ['scraping-jobs'] }), 1000),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scraping-jobs'] });
+    },
   });
+
+  useEffect(() => {
+    if (runningJobId) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ['scraping-jobs'] });
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [runningJobId, queryClient]);
+
+  const formatElapsed = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  };
 
   const statusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -104,6 +145,9 @@ export function ScrapingDashboard() {
               <input type="checkbox" checked={usePuppeteer} onChange={e => setUsePuppeteer(e.target.checked)} className="h-4 w-4" />
               Use Puppeteer (for JavaScript-rendered sites like Tayara)
             </label>
+            <Input label="Max Pages" type="number" min={1} value={maxPages} onChange={e => setMaxPages(parseInt(e.target.value) || 1)} />
+            <Input label="Page URL Pattern" value={pageUrlPattern} onChange={e => setPageUrlPattern(e.target.value)} placeholder="?page={page}" />
+            <Input label="Next Page Selector" value={nextPageSelector} onChange={e => setNextPageSelector(e.target.value)} placeholder=".pagination .next a" />
             <Button onClick={() => createSource.mutate()} disabled={!name || !baseUrl || createSource.isPending}>
               {createSource.isPending ? 'Creating...' : 'Create'}
             </Button>
@@ -144,6 +188,27 @@ export function ScrapingDashboard() {
         </CardContent>
       </Card>
 
+      {activeJob && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Scraping {activeJob.source.name}...</p>
+                <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatElapsed(elapsed)}</span>
+                  <span><RefreshCw className="h-3 w-3 inline mr-0.5" /> {activeJob.propertiesFound} properties found so far</span>
+                  {activeJob.scrapedUrls > 0 && <span>{activeJob.scrapedUrls}/{activeJob.totalUrls} pages</span>}
+                </div>
+              </div>
+              <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader><CardTitle>Job History</CardTitle></CardHeader>
         <CardContent>
@@ -159,7 +224,9 @@ export function ScrapingDashboard() {
                       <span className="font-medium">{j.source.name}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {j.completedAt ? new Date(j.completedAt).toLocaleString() : j.startedAt ? 'Running...' : 'Pending'}
+                      {j.completedAt ? new Date(j.completedAt).toLocaleString() : j.status === 'RUNNING' ? (
+                        <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Running...</span>
+                      ) : 'Pending'}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">

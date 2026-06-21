@@ -15,6 +15,8 @@ import { MyProperties } from './pages/MyProperties';
 import { FavoritesPage } from './pages/FavoritesPage';
 import { InquiriesPage } from './pages/InquiriesPage';
 import { ScrapingDashboard } from './pages/ScrapingDashboard';
+import { Settings } from './pages/Settings';
+import { ConversationsPage } from './pages/ConversationsPage';
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,8 @@ function App() {
               />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/inquiries" element={<InquiriesPage />} />
+              <Route path="/conversations" element={<ConversationsPage />} />
+              <Route path="/settings" element={<Settings />} />
               <Route
                 path="/admin"
                 element={

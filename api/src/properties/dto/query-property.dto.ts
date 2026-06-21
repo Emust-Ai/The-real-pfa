@@ -32,6 +32,11 @@ export class QueryPropertyDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
+  search?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
   scrapedFrom?: string;
 
   @ApiPropertyOptional()

@@ -12,11 +12,11 @@ export declare class InquiriesController {
             id: number;
         };
     } & {
+        message: string;
         id: number;
         createdAt: Date;
         userId: number;
         propertyId: number;
-        message: string;
     })[]>;
     create(dto: CreateInquiryDto, userId: number, propertyId: number): Promise<{
         property: {
@@ -24,10 +24,10 @@ export declare class InquiriesController {
             id: number;
         };
     } & {
+        message: string;
         id: number;
         createdAt: Date;
         userId: number;
         propertyId: number;
-        message: string;
     }>;
 }

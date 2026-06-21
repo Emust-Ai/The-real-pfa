@@ -11,12 +11,18 @@ export declare class ScrapingController {
         baseUrl: string;
         selectors: import("@prisma/client/runtime/client").JsonValue;
         usePuppeteer: boolean;
+        maxPages: number;
+        pageUrlPattern: string | null;
+        nextPageSelector: string | null;
     }[]>;
     createSource(body: {
         name: string;
         baseUrl: string;
         selectors: any;
         usePuppeteer?: boolean;
+        maxPages?: number;
+        pageUrlPattern?: string;
+        nextPageSelector?: string;
     }): Promise<{
         id: number;
         isActive: boolean;
@@ -26,8 +32,20 @@ export declare class ScrapingController {
         baseUrl: string;
         selectors: import("@prisma/client/runtime/client").JsonValue;
         usePuppeteer: boolean;
+        maxPages: number;
+        pageUrlPattern: string | null;
+        nextPageSelector: string | null;
     }>;
-    updateSource(id: number, body: any): Promise<{
+    updateSource(id: number, body: {
+        name?: string;
+        baseUrl?: string;
+        selectors?: any;
+        isActive?: boolean;
+        usePuppeteer?: boolean;
+        maxPages?: number;
+        pageUrlPattern?: string;
+        nextPageSelector?: string;
+    }): Promise<{
         id: number;
         isActive: boolean;
         createdAt: Date;
@@ -36,6 +54,9 @@ export declare class ScrapingController {
         baseUrl: string;
         selectors: import("@prisma/client/runtime/client").JsonValue;
         usePuppeteer: boolean;
+        maxPages: number;
+        pageUrlPattern: string | null;
+        nextPageSelector: string | null;
     }>;
     deleteSource(id: number): Promise<void>;
     getJobs(sourceId?: string): Promise<({
@@ -74,6 +95,7 @@ export declare class ScrapingController {
             favorites: number;
         };
     } & {
+        scrapedFrom: string | null;
         description: string | null;
         title: string;
         id: number;
@@ -94,7 +116,6 @@ export declare class ScrapingController {
         images: string[];
         features: string[];
         status: import("@prisma/client").$Enums.PropertyStatus;
-        scrapedFrom: string | null;
         sourceUrl: string | null;
         sourceUrlHash: string | null;
         retailerId: number;

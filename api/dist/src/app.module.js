@@ -17,7 +17,10 @@ const favorites_module_1 = require("./favorites/favorites.module");
 const inquiries_module_1 = require("./inquiries/inquiries.module");
 const scraping_module_1 = require("./scraping/scraping.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const messaging_module_1 = require("./messaging/messaging.module");
 const admin_module_1 = require("./admin/admin.module");
+const saved_searches_module_1 = require("./saved-searches/saved-searches.module");
+const reviews_module_1 = require("./reviews/reviews.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +37,9 @@ exports.AppModule = AppModule = __decorate([
             scraping_module_1.ScrapingModule,
             notifications_module_1.NotificationsModule,
             admin_module_1.AdminModule,
+            saved_searches_module_1.SavedSearchesModule,
+            messaging_module_1.MessagingModule,
+            reviews_module_1.ReviewsModule,
         ],
     })
 ], AppModule);

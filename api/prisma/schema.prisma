@@ -51,10 +51,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  properties  Property[]
-  favorites   Favorite[]
-  inquiries   Inquiry[]
-  notifications Notification[]
+  properties     Property[]
+  favorites      Favorite[]
+  inquiries      Inquiry[]
+  notifications  Notification[]
+  savedSearches  SavedSearch[]
+  reviews        Review[]
+  conversations  ConversationParticipant[]
+  messages       Message[]
 
   @@map("users")
 }
@@ -86,8 +90,10 @@ model Property {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  favorites Favorite[]
-  inquiries Inquiry[]
+  favorites     Favorite[]
+  inquiries     Inquiry[]
+  reviews       Review[]
+  conversations Conversation[]
 
   @@index([city])
   @@index([propertyType])
@@ -136,6 +142,73 @@ model Notification {
   @@map("notifications")
 }
 
+model SavedSearch {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  filters    Json
+  notifyInApp Boolean @default(true)
+  notifyEmail Boolean @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastNotifiedAt DateTime?
+
+  @@map("saved_searches")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@map("reviews")
+}
+
+model Conversation {
+  id         Int      @id @default(autoincrement())
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages      Message[]
+
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int
+  sender         User         @relation(fields: [senderId], references: [id])
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@map("messages")
+}
+
 enum ScrapingJobStatus {
   PENDING
   RUNNING
@@ -144,14 +217,17 @@ enum ScrapingJobStatus {
 }
 
 model ScrapingSource {
-  id           Int      @id @default(autoincrement())
-  name         String
-  baseUrl      String
-  selectors    Json
-  isActive     Boolean  @default(true)
-  usePuppeteer Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  name            String
+  baseUrl         String
+  selectors       Json
+  isActive        Boolean  @default(true)
+  usePuppeteer    Boolean  @default(false)
+  maxPages        Int      @default(1)
+  pageUrlPattern  String?
+  nextPageSelector String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   jobs ScrapingJob[]
 

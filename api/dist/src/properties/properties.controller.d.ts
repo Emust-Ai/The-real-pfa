@@ -17,6 +17,7 @@ export declare class PropertiesController {
                 id: number;
             };
         } & {
+            scrapedFrom: string | null;
             description: string | null;
             title: string;
             id: number;
@@ -37,7 +38,6 @@ export declare class PropertiesController {
             images: string[];
             features: string[];
             status: import("@prisma/client").$Enums.PropertyStatus;
-            scrapedFrom: string | null;
             sourceUrl: string | null;
             sourceUrlHash: string | null;
             retailerId: number;
@@ -55,6 +55,7 @@ export declare class PropertiesController {
             inquiries: number;
         };
     } & {
+        scrapedFrom: string | null;
         description: string | null;
         title: string;
         id: number;
@@ -75,7 +76,6 @@ export declare class PropertiesController {
         images: string[];
         features: string[];
         status: import("@prisma/client").$Enums.PropertyStatus;
-        scrapedFrom: string | null;
         sourceUrl: string | null;
         sourceUrlHash: string | null;
         retailerId: number;
@@ -93,6 +93,7 @@ export declare class PropertiesController {
             id: number;
         };
     } & {
+        scrapedFrom: string | null;
         description: string | null;
         title: string;
         id: number;
@@ -113,7 +114,6 @@ export declare class PropertiesController {
         images: string[];
         features: string[];
         status: import("@prisma/client").$Enums.PropertyStatus;
-        scrapedFrom: string | null;
         sourceUrl: string | null;
         sourceUrlHash: string | null;
         retailerId: number;
@@ -127,6 +127,7 @@ export declare class PropertiesController {
             id: number;
         };
     } & {
+        scrapedFrom: string | null;
         description: string | null;
         title: string;
         id: number;
@@ -147,7 +148,6 @@ export declare class PropertiesController {
         images: string[];
         features: string[];
         status: import("@prisma/client").$Enums.PropertyStatus;
-        scrapedFrom: string | null;
         sourceUrl: string | null;
         sourceUrlHash: string | null;
         retailerId: number;
@@ -163,6 +163,7 @@ export declare class PropertiesController {
             id: number;
         };
     } & {
+        scrapedFrom: string | null;
         description: string | null;
         title: string;
         id: number;
@@ -183,7 +184,6 @@ export declare class PropertiesController {
         images: string[];
         features: string[];
         status: import("@prisma/client").$Enums.PropertyStatus;
-        scrapedFrom: string | null;
         sourceUrl: string | null;
         sourceUrlHash: string | null;
         retailerId: number;

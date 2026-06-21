@@ -44,4 +44,8 @@ export declare class AdminService {
             completedAt: Date | null;
         })[];
     }>;
+    cleanupTestData(): Promise<{
+        deleted: number;
+        message: string;
+    }>;
 }

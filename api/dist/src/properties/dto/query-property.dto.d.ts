@@ -5,6 +5,7 @@ export declare class QueryPropertyDto {
     status?: PropertyStatus;
     city?: string;
     province?: string;
+    search?: string;
     scrapedFrom?: string;
     minPrice?: number;
     maxPrice?: number;
