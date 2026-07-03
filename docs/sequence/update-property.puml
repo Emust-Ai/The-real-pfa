@@ -1,0 +1,87 @@
+@startuml
+<style>
+skinparam backgroundColor transparent
+actor {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+boundary {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+control {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+entity {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+arrow {
+  Color #2E86C1
+  FontColor #2E86C1
+}
+</style>
+
+actor Retailer
+boundary Frontend
+control "Auth Guards" as Auth
+control Controller
+control Service
+entity Database
+
+Retailer -> Frontend: Open edit page
+activate Frontend
+
+Frontend -> Controller: GET /api/properties/:id
+activate Controller
+
+Controller -> Service: findOne(id)
+activate Service
+
+Service -> Database: Query property
+activate Database
+
+Database --> Service: Property
+deactivate Database
+
+Service --> Controller: Property
+deactivate Service
+
+Controller --> Frontend: Property data
+deactivate Controller
+
+Frontend -> Frontend: Pre-fill form
+Retailer -> Frontend: Modify details
+Retailer -> Frontend: Submit
+
+Frontend -> Auth: PATCH /api/properties/:id (JSON + JWT)
+activate Auth
+
+Auth -> Auth: Verify JWT & check role
+Auth -> Controller: Forward request
+activate Controller
+
+Controller -> Controller: Validate & transform DTO
+Controller -> Service: update(id, dto, userId, userRole)
+activate Service
+
+Service -> Service: Check ownership (owner or admin)
+Service -> Database: Update row
+activate Database
+
+Database --> Service: Updated property
+deactivate Database
+
+Service --> Controller: Property
+deactivate Service
+
+Controller --> Frontend: 200 OK
+deactivate Controller
+
+deactivate Auth
+
+Frontend -> Frontend: Redirect to /properties/my
+Frontend --> Retailer: Success
+deactivate Frontend
+@enduml

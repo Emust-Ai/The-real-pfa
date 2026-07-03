@@ -1,0 +1,70 @@
+@startuml
+<style>
+skinparam backgroundColor transparent
+actor {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+boundary {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+control {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+entity {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+arrow {
+  Color #2E86C1
+  FontColor #2E86C1
+}
+</style>
+
+actor Client
+boundary Frontend
+control "Auth Guards" as Auth
+control Controller
+control Service
+entity Database
+
+Client -> Frontend: Type inquiry message
+Client -> Frontend: Submit
+
+Frontend -> Auth: POST /api/inquiries/:propertyId (JSON + JWT)
+activate Auth
+
+Auth -> Auth: Verify JWT
+Auth -> Controller: Forward request
+activate Controller
+
+Controller -> Service: create(dto, userId, propertyId)
+activate Service
+
+Service -> Database: Find property
+activate Database
+Database --> Service: Property
+deactivate Database
+
+Service -> Database: Insert inquiry row
+activate Database
+Database --> Service: Inquiry
+deactivate Database
+
+Service -> Database: Notify retailer (if not self)
+activate Database
+Database --> Service: Notification
+deactivate Database
+
+Service --> Controller: Inquiry
+deactivate Service
+
+Controller --> Frontend: 201 Created
+deactivate Controller
+deactivate Auth
+
+Frontend -> Frontend: Clear form, show toast
+Frontend --> Client: Inquiry sent
+@enduml

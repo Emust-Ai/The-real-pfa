@@ -8,19 +8,7 @@ export declare class ScrapingService {
     private botInitPromise;
     constructor(prisma: PrismaService, notificationsService: NotificationsService);
     private ensureScrapingBot;
-    getSources(): Promise<{
-        id: number;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        baseUrl: string;
-        selectors: import("@prisma/client/runtime/client").JsonValue;
-        usePuppeteer: boolean;
-        maxPages: number;
-        pageUrlPattern: string | null;
-        nextPageSelector: string | null;
-    }[]>;
+    getSources(): Promise<any>;
     createSource(data: {
         name: string;
         baseUrl: string;
@@ -29,19 +17,7 @@ export declare class ScrapingService {
         maxPages?: number;
         pageUrlPattern?: string;
         nextPageSelector?: string;
-    }): Promise<{
-        id: number;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        baseUrl: string;
-        selectors: import("@prisma/client/runtime/client").JsonValue;
-        usePuppeteer: boolean;
-        maxPages: number;
-        pageUrlPattern: string | null;
-        nextPageSelector: string | null;
-    }>;
+    }): Promise<any>;
     updateSource(id: number, data: {
         name?: string;
         baseUrl?: string;
@@ -51,51 +27,10 @@ export declare class ScrapingService {
         maxPages?: number;
         pageUrlPattern?: string;
         nextPageSelector?: string;
-    }): Promise<{
-        id: number;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        baseUrl: string;
-        selectors: import("@prisma/client/runtime/client").JsonValue;
-        usePuppeteer: boolean;
-        maxPages: number;
-        pageUrlPattern: string | null;
-        nextPageSelector: string | null;
-    }>;
+    }): Promise<any>;
     deleteSource(id: number): Promise<void>;
-    getJobs(sourceId?: number): Promise<({
-        source: {
-            id: number;
-            name: string;
-        };
-    } & {
-        error: string | null;
-        id: number;
-        createdAt: Date;
-        status: import("@prisma/client").$Enums.ScrapingJobStatus;
-        sourceId: number;
-        totalUrls: number;
-        scrapedUrls: number;
-        failedUrls: number;
-        propertiesFound: number;
-        startedAt: Date | null;
-        completedAt: Date | null;
-    })[]>;
-    startJob(sourceId: number): Promise<{
-        error: string | null;
-        id: number;
-        createdAt: Date;
-        status: import("@prisma/client").$Enums.ScrapingJobStatus;
-        sourceId: number;
-        totalUrls: number;
-        scrapedUrls: number;
-        failedUrls: number;
-        propertiesFound: number;
-        startedAt: Date | null;
-        completedAt: Date | null;
-    }>;
+    getJobs(sourceId?: number): Promise<any>;
+    startJob(sourceId: number): Promise<any>;
     private runJob;
     private notifyAdmins;
     private hash;
@@ -104,35 +39,6 @@ export declare class ScrapingService {
     private scrapeWithCheerio;
     private scrapeWithPuppeteer;
     private extractListings;
-    getResults(sourceName: string): Promise<({
-        _count: {
-            favorites: number;
-        };
-    } & {
-        scrapedFrom: string | null;
-        description: string | null;
-        title: string;
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        price: import("@prisma/client-runtime-utils").Decimal;
-        surface: number | null;
-        rooms: number | null;
-        bedrooms: number | null;
-        bathrooms: number | null;
-        propertyType: import("@prisma/client").$Enums.PropertyType;
-        transactionType: import("@prisma/client").$Enums.TransactionType;
-        address: string | null;
-        city: string | null;
-        province: string | null;
-        latitude: number | null;
-        longitude: number | null;
-        images: string[];
-        features: string[];
-        status: import("@prisma/client").$Enums.PropertyStatus;
-        sourceUrl: string | null;
-        sourceUrlHash: string | null;
-        retailerId: number;
-    })[]>;
+    getResults(sourceName: string): Promise<any>;
     private parsePrice;
 }

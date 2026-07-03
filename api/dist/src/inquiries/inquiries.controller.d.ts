@@ -6,28 +6,6 @@ export declare class InquiriesController {
     findAll(user: {
         id: number;
         role: string;
-    }): Promise<({
-        property: {
-            title: string;
-            id: number;
-        };
-    } & {
-        message: string;
-        id: number;
-        createdAt: Date;
-        userId: number;
-        propertyId: number;
-    })[]>;
-    create(dto: CreateInquiryDto, userId: number, propertyId: number): Promise<{
-        property: {
-            title: string;
-            id: number;
-        };
-    } & {
-        message: string;
-        id: number;
-        createdAt: Date;
-        userId: number;
-        propertyId: number;
-    }>;
+    }): Promise<any>;
+    create(dto: CreateInquiryDto, userId: number, propertyId: number): Promise<any>;
 }

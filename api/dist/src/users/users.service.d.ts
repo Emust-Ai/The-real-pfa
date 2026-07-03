@@ -3,55 +3,15 @@ import { Role } from '@prisma/client';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(): Promise<{
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        role: import("@prisma/client").$Enums.Role;
-        id: number;
-        isActive: boolean;
-        createdAt: Date;
-    }[]>;
-    findOne(id: number): Promise<{
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        phone: string | null;
-        role: import("@prisma/client").$Enums.Role;
-        id: number;
-        avatar: string | null;
-        isActive: boolean;
-        createdAt: Date;
-    }>;
-    updateRole(id: number, role: Role): Promise<{
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        role: import("@prisma/client").$Enums.Role;
-        id: number;
-        isActive: boolean;
-    }>;
-    toggleActive(id: number): Promise<{
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        role: import("@prisma/client").$Enums.Role;
-        id: number;
-        isActive: boolean;
-    }>;
+    findAll(): Promise<any>;
+    findOne(id: number): Promise<any>;
+    updateRole(id: number, role: Role): Promise<any>;
+    toggleActive(id: number): Promise<any>;
     update(id: number, data: {
         firstName?: string;
         lastName?: string;
         phone?: string;
-    }): Promise<{
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        phone: string | null;
-        role: import("@prisma/client").$Enums.Role;
-        id: number;
-        isActive: boolean;
-    }>;
+    }): Promise<any>;
     updatePassword(id: number, newPassword: string): Promise<{
         message: string;
     }>;

@@ -1,0 +1,79 @@
+@startuml
+<style>
+skinparam backgroundColor transparent
+actor {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+boundary {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+control {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+entity {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+arrow {
+  Color #2E86C1
+  FontColor #2E86C1
+}
+</style>
+
+actor Client
+boundary Frontend
+control "Auth Guards" as Auth
+control Controller
+control Service
+entity Database
+
+Client -> Frontend: Type message
+Client -> Frontend: Send
+
+Frontend -> Frontend: Optimistic insert (fake message)
+Frontend --> Client: Instant display
+
+Frontend -> Auth: POST /api/conversations/:id/messages (JWT)
+activate Auth
+
+Auth -> Auth: Verify JWT
+Auth -> Controller: Forward request
+activate Controller
+
+Controller -> Service: sendMessage(id, userId, content)
+activate Service
+
+Service -> Database: Verify participant
+activate Database
+Database --> Service: Conversation w/ participants
+deactivate Database
+
+Service -> Database: Insert message row
+activate Database
+Database --> Service: Message
+deactivate Database
+
+Service -> Database: Touch conversation timestamp
+activate Database
+Database --> Service: Updated
+deactivate Database
+
+Service -> Database: Notify other participant
+activate Database
+Database --> Service: Notification
+deactivate Database
+
+Service --> Controller: Message
+deactivate Service
+
+Controller --> Frontend: 201 Created
+deactivate Controller
+deactivate Auth
+
+Frontend -> Frontend: Invalidate & refetch queries
+Frontend -> Frontend: Replace optimistic with real
+Frontend --> Client: Message delivered
+@enduml

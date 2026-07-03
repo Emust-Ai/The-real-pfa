@@ -1,0 +1,55 @@
+@startuml
+<style>
+skinparam backgroundColor transparent
+actor {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+boundary {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+control {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+entity {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+arrow {
+  Color #2E86C1
+  FontColor #2E86C1
+}
+</style>
+
+actor Guest
+boundary Frontend
+control Controller
+control Service
+entity Database
+
+Guest -> Frontend: Open property detail page
+activate Frontend
+
+Frontend -> Controller: GET /api/properties/:propertyId/reviews
+activate Controller
+
+Controller -> Service: findByProperty(propertyId)
+activate Service
+
+Service -> Database: Query reviews with user info
+activate Database
+Database --> Service: Review[]
+deactivate Database
+
+Service --> Controller: Review[]
+deactivate Service
+
+Controller --> Frontend: Review[]
+deactivate Controller
+
+Frontend -> Frontend: Render list with stars & comments
+Frontend --> Guest: Display reviews
+deactivate Frontend
+@enduml

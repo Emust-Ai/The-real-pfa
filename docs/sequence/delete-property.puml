@@ -1,0 +1,89 @@
+@startuml
+<style>
+skinparam backgroundColor transparent
+actor {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+boundary {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+control {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+entity {
+  BorderColor #2E86C1
+  FontColor #2E86C1
+}
+arrow {
+  Color #2E86C1
+  FontColor #2E86C1
+}
+</style>
+
+actor Retailer
+boundary Frontend
+control "Auth Guards" as Auth
+control Controller
+control Service
+entity Database
+
+Retailer -> Frontend: Open My Properties
+activate Frontend
+
+Frontend -> Controller: GET /api/properties/my
+activate Controller
+
+Controller -> Service: findMyProperties(userId)
+activate Service
+
+Service -> Database: Query user's properties
+activate Database
+
+Database --> Service: Properties list
+deactivate Database
+
+Service --> Controller: Properties
+deactivate Service
+
+Controller --> Frontend: Properties list
+deactivate Controller
+
+Frontend --> Retailer: Display properties
+
+Retailer -> Frontend: Click delete on property
+Frontend -> Frontend: Show confirmation
+Retailer -> Frontend: Confirm
+
+Frontend -> Auth: DELETE /api/properties/:id (JWT)
+activate Auth
+
+Auth -> Auth: Verify JWT & check role
+Auth -> Controller: Forward request
+activate Controller
+
+Controller -> Service: remove(id, userId, userRole)
+activate Service
+
+Service -> Service: Check property exists
+Service -> Service: Check ownership (owner or admin)
+Service -> Database: Delete row
+activate Database
+
+Database --> Service: Deleted
+deactivate Database
+
+Service --> Controller: Void
+deactivate Service
+
+Controller --> Frontend: 204 No Content
+deactivate Controller
+
+deactivate Auth
+
+Frontend -> Frontend: Remove from list
+Frontend --> Retailer: Property deleted
+deactivate Frontend
+@enduml
