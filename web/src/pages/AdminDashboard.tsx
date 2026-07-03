@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Building2, Users, MessageSquare, TrendingUp, Activity, AlertCircle } from 'lucide-react';
+import { Building2, Users, MessageSquare, TrendingUp, Activity } from 'lucide-react';
 
 interface AdminStats {
   users: { total: number; byRole: { role: string; _count: number }[] };
@@ -39,60 +39,47 @@ export function AdminDashboard() {
     STUDIO: 'Studios', PENTHOUSE: 'Penthouses', DUPLEX: 'Duplexes', OTHER: 'Other',
   };
 
+  const statCards = [
+    {
+      icon: Building2, label: 'Total Properties',
+      value: stats.properties.total, sub: `${stats.properties.weeklyNew} this week`,
+    },
+    {
+      icon: Users, label: 'Total Users',
+      value: stats.users.total,
+      sub: stats.users.byRole.map(r => `${r.role.toLowerCase()}s: ${r._count}`).join(', '),
+    },
+    {
+      icon: MessageSquare, label: 'Inquiries',
+      value: stats.inquiries.total, sub: 'Total received',
+    },
+    {
+      icon: TrendingUp, label: 'Avg. Price',
+      value: stats.properties.avgPrice
+        ? new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND', maximumFractionDigits: 0 }).format(Number(stats.properties.avgPrice))
+        : 'N/A',
+      sub: 'Across all listings',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.properties.total}</p>
-            <p className="text-xs text-muted-foreground">{stats.properties.weeklyNew} this week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.users.total}</p>
-            <p className="text-xs text-muted-foreground">
-              {stats.users.byRole.map(r => `${r.role.toLowerCase()}s: ${r._count}`).join(', ')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Inquiries</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats.inquiries.total}</p>
-            <p className="text-xs text-muted-foreground">Total received</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Price</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
-              {stats.properties.avgPrice
-                ? new Intl.NumberFormat('fr-TN', { style: 'currency', currency: 'TND', maximumFractionDigits: 0 }).format(Number(stats.properties.avgPrice))
-                : 'N/A'}
-            </p>
-            <p className="text-xs text-muted-foreground">Across all listings</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map(card => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="rounded-md border bg-card p-5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm text-muted-foreground">{card.label}</span>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="text-2xl font-bold">{card.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{card.sub}</p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -152,7 +139,7 @@ export function AdminDashboard() {
           ) : (
             <div className="space-y-2">
               {stats.recentJobs.map(job => (
-                <div key={job.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
+                <div key={job.id} className="flex items-center justify-between text-sm border-b border-hairline pb-2 last:border-0">
                   <div className="flex items-center gap-2">
                     {job.status === 'COMPLETED' ? (
                       <span className="h-2 w-2 rounded-full bg-green-500" />

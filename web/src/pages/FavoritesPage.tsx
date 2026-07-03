@@ -16,13 +16,13 @@ export function FavoritesPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favorites'] }),
   });
 
-  if (isLoading) return <div className="p-6"><p className="text-muted-foreground">Loading...</p></div>;
+  if (isLoading) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8"><p className="text-muted-foreground">Loading...</p></div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">My Favorites</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <h1 className="text-2xl font-semibold mb-6">My Favorites</h1>
       {data && data.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {data.map(fav => (
             <PropertyCard key={fav.id} property={fav.property}
               isFavorite onToggleFavorite={(id) => removeFav.mutate(id)} />

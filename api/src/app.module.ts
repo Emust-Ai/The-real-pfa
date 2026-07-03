@@ -12,6 +12,7 @@ import { MessagingModule } from './messaging/messaging.module';
 import { AdminModule } from './admin/admin.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { GroqModule } from './groq/groq.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     SavedSearchesModule,
     MessagingModule,
     ReviewsModule,
+    GroqModule,
   ],
 })
 export class AppModule {}

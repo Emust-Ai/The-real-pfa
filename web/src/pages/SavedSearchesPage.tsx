@@ -112,12 +112,12 @@ export function SavedSearchesPage() {
             placeholder="e.g. Apartments in Tunis under 300k"
           />
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={notifyInApp} onChange={e => setNotifyInApp(e.target.checked)} />
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={notifyInApp} onChange={e => setNotifyInApp(e.target.checked)} className="rounded-sm border-hairline text-primary" />
               Notify in app
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} />
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={notifyEmail} onChange={e => setNotifyEmail(e.target.checked)} className="rounded-sm border-hairline text-primary" />
               Notify by email
             </label>
           </div>
@@ -137,13 +137,13 @@ export function SavedSearchesPage() {
           ) : savedSearches && savedSearches.length > 0 ? (
             <div className="space-y-3">
               {savedSearches.map(s => (
-                <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-md border bg-card gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{s.name}</p>
+                    <p className="font-medium text-sm truncate">{s.name}</p>
                     <p className="text-sm text-muted-foreground truncate">{filterSummary(s.filters)}</p>
                     <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
                       <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="checkbox" checked={s.notifyInApp} onChange={() => toggleNotifyInApp(s)} />
+                        <input type="checkbox" checked={s.notifyInApp} onChange={() => toggleNotifyInApp(s)} className="rounded-sm border-hairline text-primary" />
                         In-app
                       </label>
                       <span>{s.notifyEmail ? 'Email ✓' : 'Email ✗'}</span>

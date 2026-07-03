@@ -61,13 +61,34 @@ export function Settings() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <h1 className="text-2xl font-semibold">Settings</h1>
 
-      <div className="flex gap-2 border-b pb-2">
-        <Button variant={tab === 'profile' ? 'default' : 'ghost'} onClick={() => setTab('profile')}>Profile</Button>
-        <Button variant={tab === 'password' ? 'default' : 'ghost'} onClick={() => setTab('password')}>Password</Button>
-        <Button variant={tab === 'saved-searches' ? 'default' : 'ghost'} onClick={() => setTab('saved-searches')}>Saved Searches</Button>
+      <div className="flex border-b border-hairline">
+        <button
+          onClick={() => setTab('profile')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'profile' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Profile
+        </button>
+        <button
+          onClick={() => setTab('password')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'password' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Password
+        </button>
+        <button
+          onClick={() => setTab('saved-searches')}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'saved-searches' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Saved Searches
+        </button>
       </div>
 
       {tab === 'profile' && (

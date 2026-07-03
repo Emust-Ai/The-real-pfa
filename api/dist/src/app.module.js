@@ -21,6 +21,7 @@ const messaging_module_1 = require("./messaging/messaging.module");
 const admin_module_1 = require("./admin/admin.module");
 const saved_searches_module_1 = require("./saved-searches/saved-searches.module");
 const reviews_module_1 = require("./reviews/reviews.module");
+const groq_module_1 = require("./groq/groq.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             saved_searches_module_1.SavedSearchesModule,
             messaging_module_1.MessagingModule,
             reviews_module_1.ReviewsModule,
+            groq_module_1.GroqModule,
         ],
     })
 ], AppModule);

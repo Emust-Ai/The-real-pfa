@@ -127,10 +127,10 @@ export function ScrapingDashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Scraping Dashboard</h1>
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+        <Button onClick={() => setShowForm(!showForm)}>
           <Plus className="h-4 w-4" /> Add Source
         </Button>
       </div>
@@ -138,75 +138,69 @@ export function ScrapingDashboard() {
       {showForm && (
         <Card>
           <CardHeader><CardTitle>New Scraping Source</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <Input label="Source Name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Tayara" />
             <Input label="Base URL" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} placeholder="https://www.tayara.tn/immobilier" />
             <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={usePuppeteer} onChange={e => setUsePuppeteer(e.target.checked)} className="h-4 w-4" />
+              <input type="checkbox" checked={usePuppeteer} onChange={e => setUsePuppeteer(e.target.checked)}
+                className="h-4 w-4 rounded-sm border-hairline text-primary focus-visible:outline-none focus-visible:border-foreground" />
               Use Puppeteer (for JavaScript-rendered sites like Tayara)
             </label>
             <Input label="Max Pages" type="number" min={1} value={maxPages} onChange={e => setMaxPages(parseInt(e.target.value) || 1)} />
             <Input label="Page URL Pattern" value={pageUrlPattern} onChange={e => setPageUrlPattern(e.target.value)} placeholder="?page={page}" />
             <Input label="Next Page Selector" value={nextPageSelector} onChange={e => setNextPageSelector(e.target.value)} placeholder=".pagination .next a" />
             <Button onClick={() => createSource.mutate()} disabled={!name || !baseUrl || createSource.isPending}>
-              {createSource.isPending ? 'Creating...' : 'Create'}
+              {createSource.isPending ? 'Creating...' : 'Create Source'}
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <Card>
-        <CardHeader><CardTitle>Scraping Sources</CardTitle></CardHeader>
-        <CardContent>
-          {srcLoading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : sources && sources.length > 0 ? (
-            <div className="space-y-3">
-              {sources.map(s => (
-                <div key={s.id} className="flex items-center justify-between border p-3 rounded-lg">
-                  <div>
-                    <p className="font-medium">{s.name} {s.usePuppeteer && <span className="text-xs text-primary ml-1">🐢 Puppeteer</span>}</p>
-                    <p className="text-xs text-muted-foreground truncate max-w-md">{s.baseUrl}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${s.isActive ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <Button variant="outline" size="sm" className="gap-1"
-                      onClick={() => startJob.mutate(s.id)} disabled={startJob.isPending}>
-                      {startJob.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-                      Scrape
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteSource.mutate(s.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+      {srcLoading ? (
+        <p className="text-muted-foreground">Loading sources...</p>
+      ) : sources && sources.length > 0 ? (
+        <div className="space-y-3">
+          {sources.map(s => (
+            <div key={s.id} className="rounded-md border bg-card p-4 flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="font-medium text-sm">{s.name} {s.usePuppeteer && <span className="text-xs text-primary ml-1">Puppeteer</span>}</p>
+                <p className="text-xs text-muted-foreground truncate max-w-md mt-0.5">{s.baseUrl}</p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className={`h-2 w-2 rounded-full ${s.isActive ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <Button variant="outline" size="sm"
+                  onClick={() => startJob.mutate(s.id)} disabled={startJob.isPending}>
+                  {startJob.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                  Scrape
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteSource.mutate(s.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
             </div>
-          ) : (
-            <p className="text-muted-foreground">No sources configured. Add one to start scraping.</p>
-          )}
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No sources configured. Add one to start scraping.</p>
+      )}
 
       {activeJob && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">Scraping {activeJob.source.name}...</p>
-                <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatElapsed(elapsed)}</span>
-                  <span><RefreshCw className="h-3 w-3 inline mr-0.5" /> {activeJob.propertiesFound} properties found so far</span>
-                  {activeJob.scrapedUrls > 0 && <span>{activeJob.scrapedUrls}/{activeJob.totalUrls} pages</span>}
-                </div>
-              </div>
-              <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">Scraping {activeJob.source.name}...</p>
+              <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {formatElapsed(elapsed)}</span>
+                <span><RefreshCw className="h-3 w-3 inline mr-0.5" /> {activeJob.propertiesFound} properties found so far</span>
+                {activeJob.scrapedUrls > 0 && <span>{activeJob.scrapedUrls}/{activeJob.totalUrls} pages</span>}
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden shrink-0">
+              <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: '60%' }} />
+            </div>
+          </div>
+        </div>
       )}
 
       <Card>
@@ -217,7 +211,7 @@ export function ScrapingDashboard() {
           ) : jobs && jobs.length > 0 ? (
             <div className="space-y-2">
               {jobs.map(j => (
-                <div key={j.id} className="border p-3 rounded-lg text-sm">
+                <div key={j.id} className="rounded-md border bg-card p-4 text-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {statusBadge(j.status)}
@@ -229,7 +223,7 @@ export function ScrapingDashboard() {
                       ) : 'Pending'}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground flex-wrap">
                     <span>{j.scrapedUrls}/{j.totalUrls} pages</span>
                     <span>{j.propertiesFound} properties found</span>
                     {j.failedUrls > 0 && <span className="text-destructive">{j.failedUrls} failed</span>}
@@ -240,7 +234,7 @@ export function ScrapingDashboard() {
                       </Link>
                     )}
                   </div>
-                  {j.error && <p className="text-xs text-destructive mt-1">{j.error}</p>}
+                  {j.error && <p className="text-xs text-destructive mt-1.5">{j.error}</p>}
                 </div>
               ))}
             </div>

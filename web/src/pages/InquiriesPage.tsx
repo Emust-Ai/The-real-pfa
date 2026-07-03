@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useAuthStore } from '../stores/authStore';
 import type { Inquiry } from '../types/property';
 
@@ -12,8 +11,8 @@ export function InquiriesPage() {
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <h1 className="text-2xl font-semibold">
         {user?.role === 'RETAILER' ? 'Inquiries about my properties' : 'My Inquiries'}
       </h1>
 
@@ -22,18 +21,20 @@ export function InquiriesPage() {
       ) : data && data.length > 0 ? (
         <div className="space-y-4">
           {data.map(inquiry => (
-            <Card key={inquiry.id}>
-              <CardHeader>
-                <CardTitle className="text-base">{inquiry.property.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{inquiry.message}</p>
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>From: {inquiry.user ? `${inquiry.user.firstName ?? ''} ${inquiry.user.lastName ?? ''} (${inquiry.user.email})` : 'You'}</span>
-                  <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
+            <div key={inquiry.id} className="rounded-md border bg-card p-5 space-y-2">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm">{inquiry.property.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    From: {inquiry.user ? `${inquiry.user.firstName ?? ''} ${inquiry.user.lastName ?? ''} (${inquiry.user.email})` : 'You'}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                  {new Date(inquiry.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{inquiry.message}</p>
+            </div>
           ))}
         </div>
       ) : (

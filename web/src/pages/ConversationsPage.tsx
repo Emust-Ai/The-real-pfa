@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent } from '../components/ui/card';
 import { MessageSquare, Send, ChevronLeft } from 'lucide-react';
 import { toast } from '../components/ui/toast';
 
@@ -98,123 +97,125 @@ export function ConversationsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] gap-4 p-6">
-      <div className="w-80 shrink-0 border rounded-lg overflow-y-auto">
-        <div className="p-3 border-b font-semibold flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" /> Conversations
-        </div>
-        {conversations.length === 0 && (
-          <p className="text-sm text-muted-foreground p-4 text-center">No conversations yet</p>
-        )}
-        {conversations.map(conv => {
-          const other = conv.participants[0]?.user;
-          return (
-            <button
-              key={conv.id}
-              onClick={() => setActiveId(conv.id)}
-              className={`w-full text-left p-3 border-b hover:bg-accent transition-colors ${
-                activeId === conv.id ? 'bg-accent' : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium truncate">{conv.property.title}</p>
-                {conv.unreadCount > 0 && (
-                  <span className="text-xs bg-primary text-primary-foreground rounded-full h-5 min-w-5 flex items-center justify-center px-1">
-                    {conv.unreadCount}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                {other?.firstName ?? 'Unknown'} {other?.lastName ?? ''}
-              </p>
-              {conv.lastMessage && (
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {conv.lastMessage.content}
-                </p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex-1 border rounded-lg flex flex-col">
-        {!activeId ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Select a conversation</p>
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 h-[calc(100vh-5rem)]">
+      <div className="flex h-full rounded-md border bg-card overflow-hidden">
+        <div className="w-80 shrink-0 border-r border-hairline overflow-y-auto hidden md:block">
+          <div className="p-4 border-b border-hairline">
+            <h2 className="font-semibold flex items-center gap-2 text-sm">
+              <MessageSquare className="h-4 w-4" /> Conversations
+            </h2>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-2 p-3 border-b">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setActiveId(null)}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <p className="font-medium text-sm truncate">
-                  {activeConv?.property.title ?? 'Conversation'}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {otherParticipant(activeConv!)?.firstName ?? ''}
-                </p>
+          {conversations.length === 0 && (
+            <p className="text-sm text-muted-foreground p-4 text-center">No conversations yet</p>
+          )}
+          {conversations.map(conv => {
+            const other = conv.participants[0]?.user;
+            return (
+              <button
+                key={conv.id}
+                onClick={() => setActiveId(conv.id)}
+                className={`w-full text-left flex items-center gap-3 p-3 rounded-md hover:bg-surface-soft transition-colors cursor-pointer ${
+                  activeId === conv.id ? 'bg-surface-soft' : ''
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium truncate">{conv.property.title}</p>
+                    {conv.unreadCount > 0 && (
+                      <span className="text-xs bg-primary text-primary-foreground rounded-full h-5 min-w-5 flex items-center justify-center px-1 shrink-0">
+                        {conv.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {other?.firstName ?? 'Unknown'} {other?.lastName ?? ''}
+                  </p>
+                  {conv.lastMessage && (
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                      {conv.lastMessage.content}
+                    </p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 flex flex-col min-w-0">
+          {!activeId ? (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Select a conversation</p>
               </div>
             </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 p-4 border-b border-hairline">
+                <Button variant="ghost" size="icon" className="md:hidden shrink-0" onClick={() => setActiveId(null)}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {activeConv?.property.title ?? 'Conversation'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {otherParticipant(activeConv!)?.firstName ?? ''}
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map(msg => {
-                const isMine = msg.senderId === -1;
-                return (
-                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] ${isMine ? 'order-1' : 'order-1'}`}>
-                      <div className={`rounded-lg px-3 py-2 text-sm ${
-                        isMine
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.map(msg => {
+                  const isMine = msg.senderId === -1;
+                  return (
+                    <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] rounded-md px-3 py-2 text-sm ${
+                        isMine ? 'bg-primary/10' : 'bg-surface-soft'
                       }`}>
                         <p className="text-xs font-medium mb-0.5 opacity-70">
                           {msg.sender.firstName ?? 'Unknown'}
                         </p>
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                      </div>
-                      <div className={`flex items-center gap-1 mt-0.5 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        {isMine && (
-                          <span className="text-[10px]">
-                            {msg.isRead ? '✓✓' : '✓'}
+                        <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                        )}
+                          {isMine && (
+                            <span className="text-[10px]">
+                              {msg.isRead ? '✓✓' : '✓'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
 
-            <div className="border-t p-3">
-              <form onSubmit={e => {
-                e.preventDefault();
-                if (input.trim() && activeId) {
-                  sendMsg.mutate(input.trim());
-                  setInput('');
-                }
-              }} className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1"
-                />
-                <Button type="submit" size="icon" disabled={!input.trim() || sendMsg.isPending}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
-            </div>
-          </>
-        )}
+              <div className="border-t border-hairline p-4">
+                <form onSubmit={e => {
+                  e.preventDefault();
+                  if (input.trim() && activeId) {
+                    sendMsg.mutate(input.trim());
+                    setInput('');
+                  }
+                }} className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1"
+                  />
+                  <Button type="submit" size="icon" disabled={!input.trim() || sendMsg.isPending}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
