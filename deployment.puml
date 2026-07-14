@@ -1,0 +1,86 @@
+@startuml
+skinparam backgroundColor white
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor #333333
+}
+
+title Deployment Diagram — Real Estate Scraping Platform
+
+' === CLIENT MACHINE ===
+node "Client Machine" {
+  node "Web Browser" as Browser <<device>>
+}
+
+' === SERVER MACHINE (DOCKER HOST) ===
+node "Server Machine" {
+  node "Docker Engine" as DockerHost <<executionEnvironment>> {
+
+    node "Nginx Container" as NginxNode <<executionEnvironment>> {
+      artifact "nginx.conf" as NginxConf <<artifact>>
+      artifact "index.html" as WebArtifact <<artifact>>
+    }
+
+    node "API Container" as ApiNode <<executionEnvironment>> {
+      artifact "dist/main.js" as ApiArtifact <<artifact>>
+      component "Auth Module" as Auth
+      component "Properties Module" as Props
+      component "Scraping Module" as Scraping
+      component "Groq/AI Module" as Groq
+      component "Messaging Module" as Messaging
+      component "Notifications Module" as Notifs
+    }
+
+    node "PostgreSQL Container" as PgNode <<executionEnvironment>> {
+      artifact "schema.prisma" as Schema <<artifact>>
+      component "realestate DB" as RealestateDb <<database>>
+    }
+
+    node "Redis Container" as RedisNode <<executionEnvironment>> {
+      component "Queue / Cache" as RedisCache <<database>>
+    }
+
+  }
+}
+
+' === EXTERNAL SERVICES ===
+node "External Services" {
+  node "Groq Cloud" as GroqCloud <<device>> {
+    component "Llama 3.3-70B API" as GroqApi <<component>>
+  }
+  node "Tayara.tn" as Tayara <<device>>
+  node "Mubawab.tn" as Mubawab <<device>>
+}
+
+' === DEVELOPMENT WORKSTATION ===
+node "Development Workstation" as DevNode <<device>> {
+  node "Vite Dev Server" as ViteDev <<executionEnvironment>> {
+    artifact "web/src/**" as WebSrc <<artifact>>
+  }
+  node "NestJS Dev Server" as NestDev <<executionEnvironment>> {
+    artifact "api/src/**" as ApiSrc <<artifact>>
+  }
+}
+
+' === COMMUNICATION PATHS ===
+Browser -- NginxNode : HTTPS :443
+Browser -- ViteDev : HTTP :5173
+
+ViteDev -- ApiNode : proxy /api → :3000
+NginxNode -- ApiNode : proxy_pass :3000
+
+ApiNode -- PgNode : "Prisma ORM\n@prisma/adapter-pg\n:5432"
+ApiNode -- RedisNode : Redis Protocol :6379
+
+ApiNode -- GroqCloud : Groq SDK / HTTPS
+
+Scraping -- Tayara : Puppeteer + Cheerio / HTTPS
+Scraping -- Mubawab : Puppeteer + Cheerio / HTTPS
+
+' === DEPLOYMENT RELATIONSHIPS ===
+ApiArtifact ..> ApiNode : deployed on
+Schema ..> PgNode : deployed on
+WebSrc ..> ViteDev : deployed on
+ApiSrc ..> NestDev : deployed on
+
+@enduml

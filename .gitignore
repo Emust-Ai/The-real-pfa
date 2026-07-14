@@ -1,0 +1,6 @@
+rapport/
+presentation.md
+rapport.zip
+api/dist/
+api/package-lock.json
+api/yarn.lock
